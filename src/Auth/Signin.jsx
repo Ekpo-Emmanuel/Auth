@@ -125,6 +125,7 @@ function Signin({ user }) {
                         onKeyPress={handleKeyPress}
                     />
                 </div>
+                <Link to="/forgot-password" className="mt-2 text-xs">Forgot password?</Link>
                 <div className="col-span-full">
                 <button
                     className="items-center justify-center w-full px-6 py-2.5 text-center text-white duration-200 bg-black border-2 border-black rounded-full nline-flex hover:bg-transparent hover:border-black hover:text-black focus:outline-none focus-visible:outline-black text-sm focus-visible:ring-black"

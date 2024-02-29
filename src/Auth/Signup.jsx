@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth'
-import { auth } from '../firebaseConfig';
+import { auth, provider, db } from '../firebaseConfig';
+import { signInWithPopup } from 'firebase/auth';
+import { collection, addDoc, serverTimestamp } from "firebase/firestore"; 
 
 function Signup({ user }) {
     const [email, setEmail] = useState('');
@@ -48,6 +50,38 @@ function Signup({ user }) {
         }
     };
 
+    const handleGoogleSignIn = async () => {
+        try {
+          const result = await signInWithPopup(auth, provider);
+          // Handle successful sign-in
+          console.log('User signed in:', result.user);
+        } catch (error) {
+          // Handle sign-in errors
+          console.error(error);
+        }
+      };
+
+    const GoogleSignIn = () => {
+        const [value, setValue] = useState('');
+        signInWithPopup(auth, provider)
+        .then((result) => {
+            // This gives you a Google Access Token. You can use it to access the Google API.
+            setValue(result.user.email);
+            localStorage.setItem('user', JSON.stringify(result.user.email));
+        })
+        .catch((error) => {
+            // Handle Errors here.
+            const errorCode = error.code;
+            setError(error.message);
+            setEmail(error.customData.email);
+            // var credential = GoogleAuthProvider.credentialFromError(error);
+        });
+    }
+      
+    useEffect(() => {
+        
+    })
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -56,6 +90,17 @@ function Signup({ user }) {
                 const user = userCredential.user;
                 // console.log('User signed in:', user);
 
+                // Add user data to Firestore
+                try {
+                    const docRef = await addDoc(collection(db, "users"), {
+                      email: email,
+                      createdAt: serverTimestamp(),
+                    });
+                    console.log("Document written with ID: ", docRef.id);
+                  } catch (e) {
+                    console.error("Error adding document: ", e);
+                  }
+                  
                 // Send email verification
                 await sendEmailVerification(user);
 
@@ -105,7 +150,7 @@ function Signup({ user }) {
                 </p>
             </div>
             </div>
-            <form onSubmit={handleSubmit}>
+            <form>
             <div className="mt-4 space-y-6">
                 <div className="col-span-full">
                     {emailError && <span className="mt-2 text-xs text-gray-500" style={{ color: 'red' }}>{emailError}</span>}
@@ -132,12 +177,13 @@ function Signup({ user }) {
                 
                 <div className="col-span-full">
                 {error && <span className="mt-2 text-xs text-gray-500" style={{ color: 'red' }}>{error}</span>}
-                <button
-                    className="items-center justify-center w-full px-6 py-2.5 text-center text-white duration-200 bg-black border-2 border-black rounded-full nline-flex hover:bg-transparent hover:border-black hover:text-black focus:outline-none focus-visible:outline-black text-sm focus-visible:ring-black"
-                >
+                <button className="items-center justify-center w-full px-6 py-2.5 text-center text-white duration-200 bg-black border-2 border-black rounded-full nline-flex hover:bg-transparent hover:border-black hover:text-black focus:outline-none focus-visible:outline-black text-sm focus-visible:ring-black" onClick={handleSubmit}>
                     Sign Up
                 </button>
                 </div>
+                <button className="items-center justify-center w-full px-6 py-2.5 text-center text-white duration-200 bg-black border-2 border-black rounded-full nline-flex hover:bg-transparent hover:border-black hover:text-black focus:outline-none focus-visible:outline-black text-sm focus-visible:ring-black" onClick={handleGoogleSignIn}>
+                    Sign Up with Google
+                </button>
                 <div className="col-span-full">
                     <p className="mt-2 text-sm text-gray-500">Already have an account? <Link to="/sign-in">Sign In</Link></p>
                 </div>
